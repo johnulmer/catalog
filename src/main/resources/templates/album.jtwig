@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<h1>Albums rendered by template:</h1>
+{% for a in albums %}
+<div>
+    <ul>
+        <li id="{{a.albumID}}"><a href="/album/{{a.albumID}}">Name: {{a.title}}</a></li>
+        <li>Artist: {{a.artist}}</li>
+    </ul>
+</div>
+{% endfor %}
+
+<div id='albumList'></div>
+<div id="jsonList"></div>
+
+<h1>Form to add an album:</h1>
+<div id="addAlbumForm">
+<label>Title: </label><input type="text" id="txtTitle" value=""></input><br/>
+<label>Artist: </label><input type="text" id="txtArtist" value=""></input><br/>
+<label>Genre: </label><input type="text" id="txtGenre" value=""></input><br/>
+<button id="btnAddAlbum">Add Album</button>
+</div>
+<div id="responseMsg"></div>
+
+<script>
+var btnAddAlbum = document.getElementById("btnAddAlbum");
+var txtTitle = document.getElementById("txtTitle");
+var txtArtist = document.getElementById("txtArtist");
+var txtGenre = document.getElementById("txtGenre");
+var responseMsg = document.getElementById("responseMsg");
+var albumList = document.getElementById('albumList');
+
+		window.onload = refreshAlbums();
+
+    function refreshAlbums() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/gsonAlbums');
+      xhr.onload = function(evt) {
+        if (xhr.status === 200) {
+          var response = JSON.parse(xhr.responseText);
+          albumList.innerHTML = "<h1>Albums rendered by JSON:</h2>";
+          for (i=0; i < response.length; i++) {
+            albumList.innerHTML += "<div>";
+            albumList.innerHTML += " Title: " + response[i].title;
+            albumList.innerHTML += " Artist: " + response[i].artist;
+            albumList.innerHTML += " Genre: " + response[i].genre;
+            albumList.innerHTML += "</div>";
+          }
+        } else {
+          alert('Request failed.  Returned status of ' + xhr.status);
+        }
+      };
+      xhr.send();
+    }
+
+    btnAddAlbum.addEventListener('click', function (evt) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/addAlbumByButton');
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var addResponse = xhr.responseText;
+          responseMsg.innerHTML = addResponse;
+          refreshAlbums();
+        } else if (xhr.status !== 200) {
+          alert('Request failed.  Returned status of ' + xhr.status);
+        }
+      };
+        var title = txtTitle.value;
+        var artist = txtArtist.value;
+        var genre = txtGenre.value;
+        var body = 'title=' + encodeURIComponent(title) + '&artist=' + encodeURIComponent(artist) + '&genre=' + encodeURIComponent(genre);
+        xhr.send(body);
+      });
+
+</script>
+
+</body>
+</html>
